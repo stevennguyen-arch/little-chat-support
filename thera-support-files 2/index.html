@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f2">
+  <meta name="description" content="Thera is a free, private, pattern-based supportive chat demo.">
+  <title>Thera — a supportive chat demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20343a;
+      --muted: #687975;
+      --line: #dfe7e1;
+      --paper: #fff;
+      --canvas: #f4f6f2;
+      --violet: #397365;
+      --violet-dark: #285d52;
+      --violet-pale: #edf4ef;
+      --mint: #e5f0e8;
+      --shadow: 0 24px 64px rgba(31, 57, 48, .08), 0 2px 8px rgba(31, 57, 48, .035);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    .shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 30px 0 40px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; }
+    .brand { display: flex; gap: 12px; align-items: center; font-size: 15px; font-weight: 760; letter-spacing: .025em; }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; color: white; background: var(--violet-dark); box-shadow: 0 5px 12px rgba(40, 93, 82, .16); }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .top-note { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #558c70; box-shadow: 0 0 0 3px #e6efe8; }
+
+    .layout { display: grid; grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr); gap: clamp(40px, 6vw, 78px); align-items: center; }
+    .intro { padding: 8px 0 18px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; color: var(--violet-dark); font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .eyebrow::before { width: 17px; height: 2px; border-radius: 2px; background: currentColor; content: ""; }
+    h1 { max-width: 460px; margin: 0; font-size: 60px; line-height: 1.02; letter-spacing: -.055em; }
+    h1 span { color: var(--violet); }
+    .intro-copy { max-width: 390px; margin: 21px 0 25px; color: #5e706b; font-size: 16px; line-height: 1.7; }
+    .feature-list { display: grid; gap: 13px; margin: 0; padding: 0; list-style: none; color: #435a53; font-size: 13px; }
+    .feature-list li { display: flex; gap: 10px; align-items: center; }
+    .check { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 7px; color: #318364; background: var(--mint); font-size: 12px; font-weight: 800; }
+    .fine-print { max-width: 380px; margin: 25px 0 0; color: #74837d; font-size: 12px; line-height: 1.65; }
+
+    .chat-card { overflow: hidden; border: 1px solid #dfe7e1; border-radius: 24px; background: var(--paper); box-shadow: var(--shadow); }
+    .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 23px; border-bottom: 1px solid #edf1ed; }
+    .assistant-id { display: flex; gap: 11px; align-items: center; min-width: 0; }
+    .avatar { display: grid; flex: 0 0 auto; width: 39px; height: 39px; place-items: center; border: 1px solid #e4e1ff; border-radius: 14px; color: var(--violet-dark); background: var(--violet-pale); }
+    .avatar svg { width: 21px; height: 21px; }
+    .assistant-name { margin: 0 0 4px; font-size: 15px; font-weight: 760; }
+    .assistant-state { color: #71817a; font-size: 11px; }
+    .safety-note { margin: 16px 20px 0; padding: 14px 16px; border: 1px solid #e8e4d5; border-radius: 14px; color: #5c594d; background: #fbfaf4; font-size: 12px; line-height: 1.6; }
+    .safety-note p { margin: 0; }
+    .safety-note strong { color: #3f4137; }
+    .safety-note a { color: var(--violet-dark); font-weight: 750; text-underline-offset: 2px; }
+    .crisis-note { display: block; margin-top: 5px !important; }
+    .head-actions { display: flex; gap: 7px; }
+    .icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid transparent; border-radius: 12px; color: #71817a; background: transparent; cursor: pointer; transition: background .18s, color .18s, border-color .18s; }
+    .icon-button:hover { border-color: var(--line); color: var(--ink); background: #faf9fc; }
+    .icon-button svg { width: 16px; height: 16px; }
+    .messages { display: flex; min-height: 470px; max-height: min(62vh, 620px); flex-direction: column; gap: 18px; overflow-y: auto; padding: 28px 25px; scroll-behavior: smooth; }
+    .message-row { display: flex; align-items: flex-end; gap: 8px; animation: arrive .24s ease-out both; }
+    .message-row.user { justify-content: flex-end; }
+    .message-row > div { width: max-content; min-width: 0; max-width: min(84%, 440px); }
+    .tiny-avatar { display: grid; flex: 0 0 25px; width: 25px; height: 25px; place-items: center; border-radius: 9px; color: var(--violet-dark); background: var(--violet-pale); }
+    .tiny-avatar svg { width: 14px; height: 14px; }
+    .bubble { max-width: 100%; padding: 14px 17px; border: 1px solid #e7ece8; border-radius: 17px 17px 17px 5px; color: #40534d; background: #f7f9f6; font-size: 14px; line-height: 1.62; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .user .bubble { border-color: var(--violet); border-radius: 17px 17px 5px 17px; color: white; background: var(--violet); }
+    .time { margin-top: 6px; color: #a0a3af; font-size: 9px; }
+    .user .time { text-align: right; }
+    .typing .bubble { display: flex; gap: 4px; align-items: center; min-width: 53px; height: 38px; }
+    .typing i { width: 5px; height: 5px; border-radius: 50%; background: #aaa6d8; animation: pulse 1s infinite ease-in-out; }
+    .typing i:nth-child(2) { animation-delay: .13s; }
+    .typing i:nth-child(3) { animation-delay: .26s; }
+    .suggestions { display: flex; gap: 7px; overflow-x: auto; padding: 1px 21px 15px; scrollbar-width: none; }
+    .suggestions::-webkit-scrollbar { display: none; }
+    .suggestion { flex: 0 0 auto; padding: 9px 13px; border: 1px solid #dfe8e1; border-radius: 999px; color: #3c6558; background: white; cursor: pointer; font-size: 12px; font-weight: 650; transition: border-color .18s, background .18s, transform .18s; }
+    .suggestion:hover { transform: translateY(-1px); border-color: #b8d0c1; background: #f5f8f4; }
+    .composer-wrap { padding: 0 20px 20px; }
+    .composer { display: flex; gap: 12px; align-items: flex-end; padding: 10px 10px 10px 18px; border: 1px solid #dce5de; border-radius: 18px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+    .composer:focus-within { border-color: #8db5a1; box-shadow: 0 0 0 3px rgba(57, 115, 101, .09); }
+    .composer textarea { display: block; width: 100%; min-width: 0; height: 72px; min-height: 72px; max-height: 72px; padding: 12px 0; border: 0; outline: 0; resize: none; overflow-y: auto; color: var(--ink); background: transparent; font-size: 16px; line-height: 1.5; }
+    .composer textarea::placeholder { color: #87958e; }
+    .send { display: grid; flex: 0 0 auto; width: 46px; height: 46px; place-items: center; border: 0; border-radius: 14px; color: white; background: var(--violet-dark); cursor: pointer; transition: transform .18s, background .18s; }
+    .send:hover { transform: translateY(-1px); background: var(--violet-dark); }
+    .send svg { width: 17px; height: 17px; }
+    .privacy-note { display: flex; justify-content: center; gap: 6px; margin: 12px 0 0; color: #788780; font-size: 10px; text-align: center; }
+    .privacy-note svg { width: 12px; height: 12px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 2; max-width: min(360px, calc(100% - 40px)); padding: 12px 15px; border: 1px solid #e7e5f3; border-radius: 13px; color: #49475f; background: white; box-shadow: 0 10px 35px rgba(38, 39, 66, .12); font-size: 12px; line-height: 1.5; animation: arrive .2s ease-out both; }
+    [hidden] { display: none !important; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 60%, 100% { opacity: .4; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    @media (max-width: 900px) {
+      .shell { width: min(640px, calc(100% - 28px)); padding-top: 20px; }
+      .topbar { margin-bottom: 34px; }
+      .layout { grid-template-columns: 1fr; gap: 28px; }
+      .intro { padding: 0; }
+      h1 { max-width: 500px; font-size: 52px; }
+      .intro-copy { max-width: 500px; margin: 14px 0 18px; font-size: 15px; }
+      .feature-list { grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; }
+      .feature-list li { gap: 6px; align-items: flex-start; }
+      .check { flex: 0 0 18px; width: 18px; height: 18px; font-size: 10px; }
+      .fine-print { max-width: 500px; margin-top: 14px; font-size: 11px; }
+      .messages { min-height: 390px; max-height: 56vh; }
+    }
+    @media (max-width: 400px) {
+      .shell { width: calc(100% - 24px); }
+      .topbar { margin-bottom: 28px; }
+      .top-note { font-size: 9px; letter-spacing: .02em; }
+      h1 { font-size: 44px; }
+      .feature-list { grid-template-columns: 1fr; gap: 7px; }
+      .fine-print { display: block; margin-top: 13px; font-size: 10px; }
+      .chat-head { padding: 15px; }
+      .assistant-state { font-size: 10px; }
+      .safety-note { margin: 12px 12px 0; padding: 11px 12px; font-size: 11px; }
+      .messages { min-height: 350px; padding: 18px 15px; }
+      .suggestions { padding-inline: 15px; }
+      .composer-wrap { padding: 0 12px 14px; }
+      .composer { padding-left: 13px; }
+      .composer textarea { height: 68px; min-height: 68px; max-height: 68px; }
+      .send { width: 42px; height: 42px; }
+    }
+    .icon-button:focus-visible, .suggestion:focus-visible, .send:focus-visible, .composer textarea:focus-visible { outline: 3px solid rgba(57, 115, 101, .28); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z" fill="currentColor"/></svg>
+        </span>
+        <span>Thera</span>
+      </div>
+      <div class="top-note"><span class="status-dot" aria-hidden="true"></span>Supportive · non-clinical</div>
+    </header>
+
+    <div class="layout">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow">A supportive chat demo</div>
+        <h1 id="page-title">A little room<br><span>to breathe.</span></h1>
+        <p class="intro-copy">Share what’s on your mind, pause for a grounding prompt, or think through one small next step—at your own pace.</p>
+        <ul class="feature-list">
+          <li><span class="check" aria-hidden="true">✓</span><span>Take your time</span></li>
+          <li><span class="check" aria-hidden="true">✓</span><span>Gentle prompts</span></li>
+          <li><span class="check" aria-hidden="true">✓</span><span>No server needed</span></li>
+        </ul>
+        <p class="fine-print">Thera is an original, pattern-based demo—not a real AI, therapist, or medical service. Messages stay in this browser and aren’t sent to a server.</p>
+      </section>
+
+      <section class="chat-card" aria-label="Thera supportive chat demo">
+        <header class="chat-head">
+          <div class="assistant-id">
+            <span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z" fill="currentColor"/></svg></span>
+            <div><p class="assistant-name">Thera</p><div class="assistant-state">Pattern-based demo · not therapy or medical care</div></div>
+          </div>
+          <div class="head-actions">
+            <button class="icon-button" id="shareButton" type="button" aria-label="Share this chat" title="Share this chat">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.7"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2" stroke="currentColor" stroke-width="1.7"/></svg>
+            </button>
+            <button class="icon-button" id="resetButton" type="button" aria-label="Start a new chat" title="Start a new chat">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.7-2.7L20 9M4 17v-5h5m10.1 3A7.5 7.5 0 0 1 6.4 17.7L4 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <aside class="safety-note" aria-label="Important support and crisis information">
+          <p><strong>A clear note:</strong> Thera isn’t a therapist, doctor, or medical service. It can’t diagnose or treat. For ongoing or serious concerns, please contact a qualified mental-health professional.</p>
+          <p class="crisis-note"><strong>In immediate danger?</strong> Call your local emergency number. In the U.S. and its territories, call or text <a href="tel:988">988</a> or visit <a href="https://988lifeline.org/" target="_blank" rel="noopener noreferrer">988lifeline.org</a>.</p>
+        </aside>
+
+        <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
+        <div class="suggestions" aria-label="Try asking">
+          <button class="suggestion" type="button">I feel overwhelmed</button>
+          <button class="suggestion" type="button">Help me slow down</button>
+          <button class="suggestion" type="button">What can you do?</button>
+        </div>
+        <div class="composer-wrap">
+          <form class="composer" id="chatForm">
+            <textarea id="chatInput" name="message" rows="2" maxlength="500" autocomplete="off" enterkeyhint="send" placeholder="Share what’s on your mind…" aria-label="Your message"></textarea>
+            <button class="send" type="submit" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8-3-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </form>
+          <p class="privacy-note"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>Messages stay in this browser · Enter to send · Shift+Enter for a new line</p>
+        </div>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </main>
+
+  <script>
+    const messages = document.querySelector('#messages');
+    const form = document.querySelector('#chatForm');
+    const input = document.querySelector('#chatInput');
+    const toast = document.querySelector('#toast');
+    let toastTimer;
+
+    const assistantIcon = '<span class="tiny-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>';
+
+    function addMessage(text, who = 'assistant', className = '') {
+      const row = document.createElement('div');
+      row.className = `message-row ${who} ${className}`.trim();
+      if (who === 'assistant') row.insertAdjacentHTML('afterbegin', assistantIcon);
+      const content = document.createElement('div');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      content.append(bubble);
+      if (!className) {
+        const time = document.createElement('div');
+        time.className = 'time';
+        time.textContent = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
+        content.append(time);
+      }
+      row.append(content);
+      messages.append(row);
+      messages.scrollTop = messages.scrollHeight;
+      return row;
+    }
+
+    function getReply(message) {
+      const text = message.trim().toLowerCase().replace(/[’‘]/g, "'");
+      if (/^(hi|hey|hello|howdy|good morning|good afternoon|good evening)\b/.test(text)) {
+        return 'Hey! Glad you dropped by 😊 What’s on your mind?';
+      }
+      if (/\b(suicid(?:e|al)|kill myself|take my own life|end my life|hurt myself|self[- ]harm|cut myself|don't want to live|do not want to live|want to die|wish i (?:were|was) dead|no reason to live|can't go on|cannot go on|not safe with myself|can't keep myself safe|cannot keep myself safe|kill someone|hurt someone|overdos(?:e|ed|ing)|immediate danger)\b/.test(text)) {
+        return 'I’m glad you told me. I can’t provide crisis support, but you deserve immediate help from a person. If you may be in danger now, call your local emergency number. In the U.S. or its territories, call or text 988, or visit 988lifeline.org. If you can, move near someone you trust and tell them you need help staying safe.';
+      }
+      if (/\b(diagnos(?:e|is)|medication|medicine|prescription|dosage|dose|should i stop taking|can you be my therapist|are you a therapist|are you a doctor)\b/.test(text)) {
+        return 'I’m not a clinician and can’t diagnose, recommend treatment, or advise about medication. A qualified mental-health professional or your prescribing clinician can help with that. I can still listen and offer a general, gentle prompt.';
+      }
+      if (/\b(what can you do|how do you work|who are you|what are you)\b/.test(text)) {
+        return 'I’m Thera, a small pattern-based demo—not a real AI, therapist, or clinician. I can offer a supportive prompt, a simple grounding exercise, or help you think of one small next step. I can’t diagnose, treat, or provide crisis care.';
+      }
+      if (/\b(thank you|thanks|thx)\b/.test(text)) {
+        return 'You’re welcome. Take care of yourself, and remember it’s okay to reach out to someone you trust or a qualified professional too.';
+      }
+      if (/\b(ground|calm down|slow down|breath|breathe|panic|panicking)\b/.test(text)) {
+        return 'If it feels okay, try a gentle pause: notice five things you can see, four things you can feel, and three things you can hear. There’s no need to get it perfect—stop if it doesn’t feel helpful. Would you like to share what’s happening?';
+      }
+      if (/\b(stressed|anxious|overwhelmed|worried|sad|lonely|tired|angry|afraid|scared|grief|numb|frustrated|upset|bad day)\b/.test(text)) {
+        return 'That sounds like a lot to carry. You can share as much or as little as you want. What feels most difficult about it right now?';
+      }
+      if (/\b(how do i|how can i|help me)\b/.test(text)) {
+        return 'We can take it one step at a time. What is one small thing that might make the next few minutes feel a little more manageable? I can offer general support, but I’m not a substitute for professional help.';
+      }
+      return 'I’m here to listen, though my replies come from a few built-in patterns—not a real AI. If you’d like, tell me what you’re feeling, try “help me slow down,” or we can think about one small next step.';
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 4200);
+    }
+
+    function sendMessage(text) {
+      const value = text.trim();
+      if (!value) return;
+      addMessage(value, 'user');
+      input.value = '';
+      const typing = addMessage('', 'assistant', 'typing');
+      typing.querySelector('.bubble').innerHTML = '<i></i><i></i><i></i>';
+      window.setTimeout(() => {
+        typing.remove();
+        addMessage(getReply(value));
+      }, 480);
+    }
+
+    function greet() {
+      addMessage('Hi there. 👋 I’m Thera, a small pattern-based support demo—not a person, therapist, or doctor. I can offer a gentle prompt or grounding idea. What would you like to talk about?');
+    }
+
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      sendMessage(input.value);
+      input.focus();
+    });
+
+    document.querySelectorAll('.suggestion').forEach(button => {
+      button.addEventListener('click', () => sendMessage(button.textContent));
+    });
+
+    document.querySelector('#resetButton').addEventListener('click', () => {
+      messages.replaceChildren();
+      greet();
+      input.focus();
+    });
+
+    document.querySelector('#shareButton').addEventListener('click', async () => {
+      if (location.protocol === 'file:') {
+        showToast('To share with a friend, publish this page on a free static host first. See the README for quick steps.');
+        return;
+      }
+      try {
+        if (navigator.share) await navigator.share({ title: 'Thera — supportive chat demo', text: 'Try Thera, a supportive chat demo', url: location.href });
+        else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(location.href);
+          showToast('Link copied! Send it to a friend.');
+        } else showToast(`Copy this link to share: ${location.href}`);
+      } catch (error) {
+        if (error.name !== 'AbortError') showToast(`Copy this link to share: ${location.href}`);
+      }
+    });
+
+    greet();
+  </script>
+</body>
+</html>
