@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6f2">
+  <meta name="description" content="A tiny, free chat demo that runs right in your browser.">
+  <title>Little Chat — a tiny chat demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #25283a;
+      --muted: #777b8e;
+      --line: #e9e8e3;
+      --paper: #fff;
+      --canvas: #f7f6f2;
+      --violet: #6a5be8;
+      --violet-dark: #5749d2;
+      --violet-pale: #f0efff;
+      --mint: #dff3e9;
+      --shadow: 0 22px 70px rgba(38, 39, 66, .09), 0 2px 8px rgba(38, 39, 66, .04);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 12% 12%, rgba(230, 226, 255, .68), transparent 27rem),
+        radial-gradient(ellipse at 95% 88%, rgba(220, 242, 232, .75), transparent 26rem),
+        var(--canvas);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 26px 0 32px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 52px; }
+    .brand { display: flex; gap: 11px; align-items: center; font-size: 14px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; color: white; background: var(--violet); box-shadow: 0 5px 12px rgba(106, 91, 232, .23); }
+    .brand-mark svg { width: 19px; height: 19px; }
+    .top-note { display: inline-flex; align-items: center; gap: 8px; color: #62677c; font-size: 12px; font-weight: 650; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #48b684; box-shadow: 0 0 0 3px #e4f5ed; }
+
+    .layout { display: grid; grid-template-columns: minmax(250px, .78fr) minmax(0, 1.22fr); gap: clamp(32px, 7vw, 88px); align-items: center; }
+    .intro { padding: 8px 0 18px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; color: var(--violet-dark); font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .eyebrow::before { width: 17px; height: 2px; border-radius: 2px; background: currentColor; content: ""; }
+    h1 { max-width: 440px; margin: 0; font-size: clamp(42px, 5.3vw, 66px); line-height: .99; letter-spacing: -.065em; }
+    h1 span { color: var(--violet); }
+    .intro-copy { max-width: 365px; margin: 21px 0 25px; color: #696d80; font-size: 15px; line-height: 1.7; }
+    .feature-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; color: #555a6c; font-size: 13px; }
+    .feature-list li { display: flex; gap: 10px; align-items: center; }
+    .check { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 7px; color: #318364; background: var(--mint); font-size: 12px; font-weight: 800; }
+    .fine-print { max-width: 360px; margin: 25px 0 0; color: #85899a; font-size: 11px; line-height: 1.65; }
+
+    .chat-card { overflow: hidden; border: 1px solid rgba(224, 223, 232, .85); border-radius: 22px; background: var(--paper); box-shadow: var(--shadow); }
+    .chat-head { display: flex; align-items: center; justify-content: space-between; padding: 19px 21px; border-bottom: 1px solid #f0eff2; }
+    .assistant-id { display: flex; gap: 11px; align-items: center; min-width: 0; }
+    .avatar { display: grid; flex: 0 0 auto; width: 39px; height: 39px; place-items: center; border: 1px solid #e4e1ff; border-radius: 14px; color: var(--violet-dark); background: var(--violet-pale); }
+    .avatar svg { width: 21px; height: 21px; }
+    .assistant-name { margin: 0 0 3px; font-size: 13px; font-weight: 750; }
+    .assistant-state { color: #898d9c; font-size: 10px; }
+    .safety-note { margin: 14px 16px 0; padding: 12px 14px; border: 1px solid #eee8d9; border-radius: 13px; color: #5e594e; background: #fffdf7; font-size: 10px; line-height: 1.55; }
+    .safety-note p { margin: 0; }
+    .safety-note strong { color: #484436; }
+    .safety-note a { color: #594abf; font-weight: 700; text-underline-offset: 2px; }
+    .crisis-note { display: block; margin-top: 5px !important; }
+    .head-actions { display: flex; gap: 7px; }
+    .icon-button { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid transparent; border-radius: 10px; color: #85899a; background: transparent; cursor: pointer; transition: background .18s, color .18s, border-color .18s; }
+    .icon-button:hover { border-color: var(--line); color: var(--ink); background: #faf9fc; }
+    .icon-button svg { width: 16px; height: 16px; }
+    .messages { display: flex; min-height: 342px; max-height: min(48vh, 470px); flex-direction: column; gap: 16px; overflow-y: auto; padding: 23px 21px; scroll-behavior: smooth; }
+    .message-row { display: flex; align-items: flex-end; gap: 8px; animation: arrive .24s ease-out both; }
+    .message-row.user { justify-content: flex-end; }
+    .tiny-avatar { display: grid; flex: 0 0 25px; width: 25px; height: 25px; place-items: center; border-radius: 9px; color: var(--violet-dark); background: var(--violet-pale); }
+    .tiny-avatar svg { width: 14px; height: 14px; }
+    .bubble { max-width: min(84%, 360px); padding: 12px 14px; border: 1px solid #eeedf2; border-radius: 15px 15px 15px 5px; color: #4f5365; background: #fbfafc; font-size: 13px; line-height: 1.58; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .user .bubble { border-color: var(--violet); border-radius: 15px 15px 5px 15px; color: white; background: var(--violet); }
+    .time { margin-top: 6px; color: #a0a3af; font-size: 9px; }
+    .user .time { text-align: right; }
+    .typing .bubble { display: flex; gap: 4px; align-items: center; min-width: 53px; height: 38px; }
+    .typing i { width: 5px; height: 5px; border-radius: 50%; background: #aaa6d8; animation: pulse 1s infinite ease-in-out; }
+    .typing i:nth-child(2) { animation-delay: .13s; }
+    .typing i:nth-child(3) { animation-delay: .26s; }
+    .suggestions { display: flex; gap: 7px; overflow-x: auto; padding: 1px 21px 15px; scrollbar-width: none; }
+    .suggestions::-webkit-scrollbar { display: none; }
+    .suggestion { flex: 0 0 auto; padding: 8px 11px; border: 1px solid #e9e7f7; border-radius: 999px; color: #665cbd; background: white; cursor: pointer; font-size: 10px; font-weight: 650; transition: border-color .18s, background .18s, transform .18s; }
+    .suggestion:hover { transform: translateY(-1px); border-color: #c9c4f3; background: #f8f7ff; }
+    .composer-wrap { padding: 0 16px 16px; }
+    .composer { display: flex; gap: 9px; align-items: center; padding: 7px 7px 7px 15px; border: 1px solid #e8e7ed; border-radius: 15px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+    .composer:focus-within { border-color: #b8b1f5; box-shadow: 0 0 0 3px rgba(106, 91, 232, .08); }
+    .composer input { width: 100%; min-width: 0; padding: 8px 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 12px; }
+    .composer input::placeholder { color: #a0a3af; }
+    .send { display: grid; flex: 0 0 auto; width: 37px; height: 37px; place-items: center; border: 0; border-radius: 11px; color: white; background: var(--violet); cursor: pointer; transition: transform .18s, background .18s; }
+    .send:hover { transform: translateY(-1px); background: var(--violet-dark); }
+    .send svg { width: 17px; height: 17px; }
+    .privacy-note { display: flex; justify-content: center; gap: 5px; margin: 11px 0 0; color: #a0a3af; font-size: 9px; text-align: center; }
+    .privacy-note svg { width: 12px; height: 12px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 2; max-width: min(360px, calc(100% - 40px)); padding: 12px 15px; border: 1px solid #e7e5f3; border-radius: 13px; color: #49475f; background: white; box-shadow: 0 10px 35px rgba(38, 39, 66, .12); font-size: 12px; line-height: 1.5; animation: arrive .2s ease-out both; }
+    [hidden] { display: none !important; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 60%, 100% { opacity: .4; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    @media (max-width: 760px) {
+      .shell { width: min(540px, calc(100% - 28px)); padding-top: 17px; }
+      .topbar { margin-bottom: 30px; }
+      .layout { grid-template-columns: 1fr; gap: 25px; }
+      .intro { padding: 0; }
+      h1 { max-width: 500px; font-size: clamp(43px, 12vw, 58px); }
+      .intro-copy { max-width: 430px; margin: 13px 0 16px; font-size: 14px; }
+      .feature-list { grid-template-columns: repeat(3, 1fr); gap: 7px; font-size: 10px; }
+      .feature-list li { gap: 6px; align-items: flex-start; }
+      .check { flex: 0 0 18px; width: 18px; height: 18px; font-size: 10px; }
+      .fine-print { margin-top: 12px; font-size: 10px; }
+      .messages { min-height: 300px; max-height: 45vh; }
+    }
+    @media (max-width: 400px) {
+      .top-note { font-size: 10px; }
+      .feature-list { grid-template-columns: 1fr; gap: 6px; }
+      .fine-print { display: none; }
+      .chat-head { padding: 15px; }
+      .safety-note { margin: 12px 12px 0; padding: 11px 12px; }
+      .messages { padding: 18px 15px; }
+      .suggestions { padding-inline: 15px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z" fill="currentColor"/></svg>
+        </span>
+        <span>little chat</span>
+      </div>
+      <div class="top-note"><span class="status-dot" aria-hidden="true"></span>Supportive · non-clinical</div>
+    </header>
+
+    <div class="layout">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow">A supportive chat</div>
+        <h1 id="page-title">A gentle space<br><span>to talk.</span></h1>
+        <p class="intro-copy">Share what’s on your mind, pause for a grounding prompt, or think through one small next step—at your own pace.</p>
+        <ul class="feature-list">
+          <li><span class="check" aria-hidden="true">✓</span><span>Take your time</span></li>
+          <li><span class="check" aria-hidden="true">✓</span><span>Gentle prompts</span></li>
+          <li><span class="check" aria-hidden="true">✓</span><span>No server needed</span></li>
+        </ul>
+        <p class="fine-print">Little Chat is an original, pattern-based demo—not a real AI model. Your messages stay in this page and aren’t sent to a server.</p>
+      </section>
+
+      <section class="chat-card" aria-label="Chat demo">
+        <header class="chat-head">
+          <div class="assistant-id">
+            <span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m19 3 .7 2.3L22 6l-2.3.7L19 9l-.7-2.3L16 6l2.3-.7L19 3Z" fill="currentColor"/></svg></span>
+            <div><p class="assistant-name">Little Chat</p><div class="assistant-state">Gentle prompts · not clinical care</div></div>
+          </div>
+          <div class="head-actions">
+            <button class="icon-button" id="shareButton" type="button" aria-label="Share this chat" title="Share this chat">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.7"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2" stroke="currentColor" stroke-width="1.7"/></svg>
+            </button>
+            <button class="icon-button" id="resetButton" type="button" aria-label="Start a new chat" title="Start a new chat">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.7-2.7L20 9M4 17v-5h5m10.1 3A7.5 7.5 0 0 1 6.4 17.7L4 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <aside class="safety-note" aria-label="Important support and crisis information">
+          <p><strong>Important:</strong> I’m not a doctor or therapist. This chat is not professional help and can’t diagnose or treat. For ongoing or serious concerns, contact a qualified mental-health professional.</p>
+          <p class="crisis-note"><strong>In immediate danger?</strong> Call your local emergency number. In the U.S. and its territories, call or text <a href="tel:988">988</a> or visit <a href="https://988lifeline.org/" target="_blank" rel="noopener noreferrer">988lifeline.org</a>.</p>
+        </aside>
+
+        <div class="messages" id="messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
+        <div class="suggestions" aria-label="Try asking">
+          <button class="suggestion" type="button">I feel overwhelmed</button>
+          <button class="suggestion" type="button">Help me slow down</button>
+          <button class="suggestion" type="button">What can you do?</button>
+        </div>
+        <div class="composer-wrap">
+          <form class="composer" id="chatForm">
+            <input id="chatInput" name="message" type="text" maxlength="500" autocomplete="off" placeholder="Share what’s on your mind…" aria-label="Your message">
+            <button class="send" type="submit" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8-3-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 12h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </form>
+          <p class="privacy-note"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2"/></svg>Messages stay in this page and aren’t sent to a server</p>
+        </div>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </main>
+
+  <script>
+    const messages = document.querySelector('#messages');
+    const form = document.querySelector('#chatForm');
+    const input = document.querySelector('#chatInput');
+    const toast = document.querySelector('#toast');
+    let toastTimer;
+
+    const assistantIcon = '<span class="tiny-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 13.9 10l6.6 2-6.6 2L12 20.5 10.1 14l-6.6-2 6.6-2L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>';
+
+    function addMessage(text, who = 'assistant', className = '') {
+      const row = document.createElement('div');
+      row.className = `message-row ${who} ${className}`.trim();
+      if (who === 'assistant') row.insertAdjacentHTML('afterbegin', assistantIcon);
+      const content = document.createElement('div');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      content.append(bubble);
+      if (!className) {
+        const time = document.createElement('div');
+        time.className = 'time';
+        time.textContent = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date());
+        content.append(time);
+      }
+      row.append(content);
+      messages.append(row);
+      messages.scrollTop = messages.scrollHeight;
+      return row;
+    }
+
+    function getReply(message) {
+      const text = message.trim().toLowerCase().replace(/[’‘]/g, "'");
+      if (/^(hi|hey|hello|howdy|good morning|good afternoon|good evening)\b/.test(text)) {
+        return 'Hey! Glad you dropped by 😊 What’s on your mind?';
+      }
+      if (/\b(suicid(?:e|al)|kill myself|take my own life|end my life|hurt myself|self[- ]harm|cut myself|don't want to live|do not want to live|want to die|wish i (?:were|was) dead|no reason to live|can't go on|cannot go on|not safe with myself|can't keep myself safe|cannot keep myself safe|kill someone|hurt someone|overdos(?:e|ed|ing)|immediate danger)\b/.test(text)) {
+        return 'I’m glad you told me. I can’t provide crisis support, but you deserve immediate help from a person. If you may be in danger now, call your local emergency number. In the U.S. or its territories, call or text 988, or visit 988lifeline.org. If you can, move near someone you trust and tell them you need help staying safe.';
+      }
+      if (/\b(diagnos(?:e|is)|medication|medicine|prescription|dosage|dose|should i stop taking|can you be my therapist|are you a therapist|are you a doctor)\b/.test(text)) {
+        return 'I’m not a clinician and can’t diagnose, recommend treatment, or advise about medication. A qualified mental-health professional or your prescribing clinician can help with that. I can still listen and offer a general, gentle prompt.';
+      }
+      if (/\b(what can you do|how do you work|who are you|what are you)\b/.test(text)) {
+        return 'I’m Little Chat, a small pattern-based demo—not a real AI or a therapist. I can offer a supportive prompt, a simple grounding exercise, or help you think of one small next step. I can’t diagnose, treat, or provide crisis care.';
+      }
+      if (/\b(thank you|thanks|thx)\b/.test(text)) {
+        return 'You’re welcome. Take care of yourself, and remember it’s okay to reach out to someone you trust or a qualified professional too.';
+      }
+      if (/\b(ground|calm down|slow down|breath|breathe|panic|panicking)\b/.test(text)) {
+        return 'If it feels okay, try a gentle pause: notice five things you can see, four things you can feel, and three things you can hear. There’s no need to get it perfect—stop if it doesn’t feel helpful. Would you like to share what’s happening?';
+      }
+      if (/\b(stressed|anxious|overwhelmed|worried|sad|lonely|tired|angry|afraid|scared|grief|numb|frustrated|upset|bad day)\b/.test(text)) {
+        return 'That sounds like a lot to carry. You can share as much or as little as you want. What feels most difficult about it right now?';
+      }
+      if (/\b(how do i|how can i|help me)\b/.test(text)) {
+        return 'We can take it one step at a time. What is one small thing that might make the next few minutes feel a little more manageable? I can offer general support, but I’m not a substitute for professional help.';
+      }
+      return 'I’m here to listen, though my replies come from a few built-in patterns—not a real AI. If you’d like, tell me what you’re feeling, try “help me slow down,” or we can think about one small next step.';
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 4200);
+    }
+
+    function sendMessage(text) {
+      const value = text.trim();
+      if (!value) return;
+      addMessage(value, 'user');
+      input.value = '';
+      const typing = addMessage('', 'assistant', 'typing');
+      typing.querySelector('.bubble').innerHTML = '<i></i><i></i><i></i>';
+      window.setTimeout(() => {
+        typing.remove();
+        addMessage(getReply(value));
+      }, 480);
+    }
+
+    function greet() {
+      addMessage('Hi. 👋 You can share what’s on your mind, and I’ll offer a gentle prompt or simple coping idea. I’m a small pattern-based demo, not a person or clinician. What’s been on your mind?');
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      sendMessage(input.value);
+      input.focus();
+    });
+
+    document.querySelectorAll('.suggestion').forEach(button => {
+      button.addEventListener('click', () => sendMessage(button.textContent));
+    });
+
+    document.querySelector('#resetButton').addEventListener('click', () => {
+      messages.replaceChildren();
+      greet();
+      input.focus();
+    });
+
+    document.querySelector('#shareButton').addEventListener('click', async () => {
+      if (location.protocol === 'file:') {
+        showToast('To share with a friend, publish this page on a free static host first. See the README for quick steps.');
+        return;
+      }
+      try {
+        if (navigator.share) await navigator.share({ title: 'Little Chat Support', text: 'Try this supportive chat demo', url: location.href });
+        else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(location.href);
+          showToast('Link copied! Send it to a friend.');
+        } else showToast(`Copy this link to share: ${location.href}`);
+      } catch (error) {
+        if (error.name !== 'AbortError') showToast(`Copy this link to share: ${location.href}`);
+      }
+    });
+
+    greet();
+  </script>
+</body>
+</html>
